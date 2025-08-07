@@ -2,13 +2,14 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, Suspense } from "react";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 
 function PaystackComponent() {
   const params = useSearchParams();
 
   const verifyPayment = async (reference: string) => {
     try {
-      const res = await fetch("http://localhost:3001/api/bookings/verify-payment", {
+      const res = await fetch(`${getApiBaseUrl()}/api/bookings/verify-payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reference }),

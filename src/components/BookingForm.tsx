@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 type Props = {
   room: {
@@ -47,7 +48,7 @@ export default function BookingForm({ room, checkIn, checkOut }: Props) {
     try {
       setSubmitting(true);
 
-      const response = await axios.post('/api/booking', {
+      const response = await axios.post(`${getApiBaseUrl()}/api/booking`, {
         roomId: room._id,
         name: guestName,
         email,
