@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { getRoomStatus } from "@/utils/getRoomStatus";
 import { Booking } from "@/types";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 
 interface Room {
   _id: string;
@@ -59,7 +60,7 @@ export default function RoomListingsPage() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-       const res = await axios.get("http://localhost:3001/api/rooms", {
+       const res = await axios.get(`${getApiBaseUrl()}/api/rooms`, {
           withCredentials: true,
         });
         
@@ -82,7 +83,7 @@ export default function RoomListingsPage() {
     const fetchBookings = async () => {
       try {
         // Bookings (fetch)
-          const res = await fetch("http://localhost:3001/api/bookings", {
+          const res = await fetch(`${getApiBaseUrl()}/api/bookings`, {
             credentials: "include",
           });
 
@@ -123,8 +124,8 @@ const payload = {
 
 
   const endpoint = isBooking
-    ? "http://localhost:3001/api/bookings/manual"
-    : "http://localhost:3001/api/bookings/reserve";
+    ? `${getApiBaseUrl()}/api/bookings/manual`
+    : `${getApiBaseUrl()}/api/bookings/reserve`;
 
   try {
     await axios.post(endpoint, payload);

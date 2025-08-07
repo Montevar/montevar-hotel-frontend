@@ -1,1 +1,3 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://montevar-hotel-backend.onrender.com";
+import { getApiBaseUrl } from './apiConfig';
+
+export const API_BASE_URL = getApiBaseUrl();

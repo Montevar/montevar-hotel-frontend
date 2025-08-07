@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { Booking } from "@/types";
 import { useToast } from "@chakra-ui/react";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 
 
 const DashboardInfoPage = () => {
@@ -21,7 +22,7 @@ const DashboardInfoPage = () => {
  useEffect(() => {
   const fetchBookings = async () => {
     try {
-      const response = await fetch("http://localhost:3001/api/bookings");
+      const response = await fetch(`${getApiBaseUrl()}/api/bookings`);
       const data = await response.json();
 
       // Sort by MongoDB ObjectId timestamp (newest first)
@@ -43,7 +44,7 @@ const DashboardInfoPage = () => {
 
   const handleCancel = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/bookings/cancel/${id}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/bookings/cancel/${id}`, {
         method: "PATCH",
       });
       const result = await res.json();
@@ -65,7 +66,7 @@ const DashboardInfoPage = () => {
 
  const handleClearAll = async () => {
   try {
-    const res = await fetch("http://localhost:3001/api/bookings/clear-all", {
+    const res = await fetch(`${getApiBaseUrl()}/api/bookings/clear-all`, {
       method: "DELETE",
     });
 

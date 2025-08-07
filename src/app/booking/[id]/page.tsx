@@ -5,6 +5,13 @@ import { Box } from '@chakra-ui/react';
 import axios from 'axios';
 import BookingPageClient from './BookingPageClient';
 
+// Helper function for server-side API calls
+const getServerApiBaseUrl = () => {
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://montevar-hotel-server.onrender.com'
+    : 'http://localhost:3001';
+};
+
 export default async function RoomBookingPage({
   params,
 }: {
@@ -14,7 +21,7 @@ export default async function RoomBookingPage({
 
   let room = null;
   try {
-    const res = await axios.get(`${process.env.BACKEND_URL}/api/rooms/${id}`);
+    const res = await axios.get(`${getServerApiBaseUrl()}/api/rooms/${id}`);
     room = res.data;
   } catch (error) {
     notFound();

@@ -20,6 +20,7 @@ import {
 import { HamburgerIcon } from '@chakra-ui/icons';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/auth/check-session', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/check-session`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -68,7 +69,7 @@ function DashboardLayout({
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleLogout = () => {
-    fetch('http://localhost:3001/api/auth/logout', {
+    fetch(`${getApiBaseUrl()}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     }).then(() => {
@@ -185,7 +186,7 @@ function TOTPLogin({ onSuccess }: { onSuccess: () => void }) {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:3001/api/auth/verify-totp', {
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/verify-totp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
