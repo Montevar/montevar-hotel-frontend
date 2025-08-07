@@ -1,14 +1,15 @@
-// app/booking/[id]/page.tsx
-import BookingPageClient from './BookingPageClient';
+// src/app/booking/[id]/page.tsx
+
 import { notFound } from 'next/navigation';
-import axios from 'axios';
 import { Box } from '@chakra-ui/react';
+import axios from 'axios';
+import BookingPageClient from './BookingPageClient';
 
-type BookingPageProps = {
+export default async function RoomBookingPage({
+  params,
+}: {
   params: { id: string };
-};
-
-export default async function RoomBookingPage({ params }: BookingPageProps) {
+}) {
   const { id } = params;
 
   let room = null;
