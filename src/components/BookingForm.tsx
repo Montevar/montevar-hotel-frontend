@@ -48,7 +48,7 @@ export default function BookingForm({ room, checkIn, checkOut }: Props) {
     try {
       setSubmitting(true);
 
-      const response = await axios.post(`${getApiBaseUrl()}/api/booking`, {
+      const response = await axios.post(`${getApiBaseUrl()}/api/bookings`, {
         roomId: room._id,
         name: guestName,
         email,
