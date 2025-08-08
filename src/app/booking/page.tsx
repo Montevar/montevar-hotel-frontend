@@ -134,53 +134,51 @@ useEffect(() => {
     let payload;
 
     if (mode === "book") {
-      payload = {
-        fullName: name,
-        phone: phone,
-        email,
-        roomId: selectedRoom._id,
-        roomName: selectedRoom.name,
-        roomNumber: selectedRoom.roomNumber ?? 0,
-        roomPrice: selectedRoom.price,  // <--- roomPrice here, not price
-        amount: selectedRoom.price,
-        startDate,
-        endDate,
-        source: "user",
-      };
+  // BOOK: initialize Paystack payment
+  payload = {
+    fullName: name,
+    phone,
+    email,
+    roomId: selectedRoom._id,
+    roomName: selectedRoom.name,
+    roomNumber: selectedRoom.roomNumber ?? 0,
+    roomPrice: selectedRoom.price,
+    amount: selectedRoom.price,
+    startDate,
+    endDate,
+    source: "user",
+  };
+
+  res = await fetch(`${API_BASE_URL}/api/bookings/initialize-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+} else {
+  // RESERVE: create unpaid booking
+  payload = {
+    fullName: name,
+    phone,
+    email,
+    roomId: selectedRoom._id,
+    roomName: selectedRoom.name,
+    roomNumber: selectedRoom.roomNumber ?? 0,
+    roomPrice: selectedRoom.price,
+    startDate,
+    endDate,
+    source: "user",
+  };
 
   res = await fetch(`${API_BASE_URL}/api/bookings`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include",   // add this if using cookies/sessions
-  body: JSON.stringify(payload),
-});
-
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
 }
 
-
-    else {
-      payload = {
-        fullName: name,
-        phone: phone,
-        email,
-        roomId: selectedRoom._id,
-        roomName: selectedRoom.name,
-        roomNumber: selectedRoom.roomNumber ?? 0,
-        roomPrice: selectedRoom.price,  // <--- roomPrice here too
-        startDate,
-        endDate,
-        source: "user",
-      };
-
-      res = await fetch(`${API_BASE_URL}/api/bookings/initialize-payment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-
-
-    }
 
     const data = await res.json();
 
