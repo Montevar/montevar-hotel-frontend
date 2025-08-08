@@ -172,12 +172,13 @@ useEffect(() => {
         source: "user",
       };
 
-     res = await fetch(`${API_BASE_URL}/api/bookings/reserve`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include", // <-- important for cookies/session
-  body: JSON.stringify(payload),
-});
+      res = await fetch(`${API_BASE_URL}/api/bookings/initialize-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
 
     }
 

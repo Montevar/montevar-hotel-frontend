@@ -13,8 +13,9 @@ function PaystackComponent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reference }),
+        
       });
-
+        
       const data = await res.json();
 
       if (data.verified) {
