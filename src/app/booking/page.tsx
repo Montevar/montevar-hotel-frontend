@@ -44,6 +44,7 @@ export default function BookingPage() {
   const onClose = formModal.onClose;
   const mode = isBooking ? "book" : isReserving ? "reserve" : "";
 
+
 useEffect(() => {
   const searchParams = new URLSearchParams(window.location.search);
   const reference = searchParams.get("reference");
