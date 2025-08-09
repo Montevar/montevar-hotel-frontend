@@ -194,7 +194,7 @@ useEffect(() => {
     } else {
       toast({
         title: "Room reserved successfully!",
-        description: "NOTE: Please contact us to make payment 12 hours to prior to check-in, in other to avoid cancellation .",
+        description: "NOTE: Please contact us to make payment 12 hours prior to check-in, in other to avoid cancellation .",
         status: "success",
         duration: 20000,
         isClosable: true,
