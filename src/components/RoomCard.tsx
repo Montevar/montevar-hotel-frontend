@@ -21,7 +21,7 @@ export default function RoomCard({ room, onSelect }: Props) {
       w="full"
     >
       <Image
-        src={room.photo}
+        src={room.images[0]}
         alt={room.name}
         borderRadius="md"
         mb={3}
