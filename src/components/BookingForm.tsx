@@ -21,7 +21,7 @@ type Props = {
     name: string;
     category: string;
     price: number;
-    photo: string;
+    images: string[];  // <-- change here
   };
   checkIn: string;
   checkOut: string;
@@ -89,7 +89,13 @@ export default function BookingForm({ room, checkIn, checkOut }: Props) {
       bg="white"
     >
       <VStack spacing={4} align="stretch">
-        <Image src={room.photo} alt={room.name} borderRadius="md" h="200px" objectFit="cover" />
+      <Image 
+        src={room.images[0]} 
+        alt={room.name} 
+        borderRadius="md" 
+        h="200px" 
+        objectFit="cover" 
+      />
 
         <Box>
           <Text fontSize="xl" fontWeight="bold">{room.name}</Text>
