@@ -12,11 +12,11 @@ interface RoomListProps {
 
 // Mock rooms data
 const mockRooms: Room[] = [
-  { _id: '1', name: 'Room Canada', category: 'Standard', price: 30000, photo: '/images/canada.jpeg', isBooked: false },
-  { _id: '2', name: 'Room Italy', category: 'Standard', price: 30000, photo: '/images/italy.jpeg', isBooked: true },
-  { _id: '3', name: 'Room USA', category: 'Executive', price: 40000, photo: '/images/usa.jpeg', isBooked: false },
-  { _id: '4', name: 'Room Paris', category: 'Classic Executive', price: 50000, photo: '/images/paris.jpeg', isBooked: false },
-  // Add all 21 rooms later
+  { _id: '1', name: 'Room Canada', category: 'Standard', price: 30000, images: ['/images/canada.jpeg'], isBooked: false },
+  { _id: '2', name: 'Room Italy', category: 'Standard', price: 30000, images: ['/images/italy.jpeg'], isBooked: true },
+  { _id: '3', name: 'Room USA', category: 'Executive', price: 40000, images: ['/images/usa.jpeg'], isBooked: false },
+  { _id: '4', name: 'Room Paris', category: 'Classic Executive', price: 50000, images: ['/images/paris.jpeg'], isBooked: false },
+  // Add all 21 rooms later, each with images: [string]
 ];
 
 export default function RoomList({ category, onSelectRoom }: RoomListProps) {

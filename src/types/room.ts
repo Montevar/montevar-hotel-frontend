@@ -4,6 +4,5 @@ export type Room = {
   category: string;
   price: number;
   images: string[];       // <-- Add this line
-  photo: string;
   isBooked?: boolean;  // optional depending on use
 };
