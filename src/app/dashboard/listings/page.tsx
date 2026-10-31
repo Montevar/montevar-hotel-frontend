@@ -23,7 +23,7 @@ import {
   Input,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { getRoomStatus } from "@/utils/getRoomStatus";
 import { Booking } from "@/types";
@@ -52,6 +52,8 @@ export default function RoomListingsPage() {
   });
   const [isBooking, setIsBooking] = useState(false);
   const [isReserving, setIsReserving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const toast = useToast();
   const photoModal = useDisclosure();
@@ -87,6 +89,7 @@ export default function RoomListingsPage() {
             credentials: "include",
           });
 
+        if (!res.ok) throw new Error(`Failed with status ${res.status}`);
         const data = await res.json();
         setBookings(data);
       } catch (err) {
@@ -105,7 +108,10 @@ export default function RoomListingsPage() {
   };
 
  const handleSubmit = async () => {
-  if (!selectedRoom) return;
+  // Ignore extra clicks while a booking is being saved, so it isn't created twice
+  if (!selectedRoom || submittingRef.current) return;
+  submittingRef.current = true; // ref updates instantly, even before the button re-renders
+  setIsSubmitting(true);
 
 const payload = {
   fullName: formData.name,
@@ -128,7 +134,7 @@ const payload = {
     : `${getApiBaseUrl()}/api/bookings/reserve`;
 
   try {
-    await axios.post(endpoint, payload);
+    await axios.post(endpoint, payload, { withCredentials: true });
     toast({
       title: `${isBooking ? "Booked" : "Reserved"} successfully`,
       status: "success",
@@ -136,13 +142,17 @@ const payload = {
     formModal.onClose();
     window.location.reload(); // reload to reflect updated bookings
   } catch (error) {
+    const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
     toast({
       title: "Error",
       status: "error",
-      description: "Could not submit",
+      description: message || "Could not submit",
     });
     console.error("Booking submission error:", error);
+    submittingRef.current = false; // allow fixing the form and trying again
+    setIsSubmitting(false);
   }
+  // On success the page reloads, so the button stays disabled until then
 };
 
 
@@ -152,7 +162,7 @@ const payload = {
       <Heading mb={6}>Room Listings</Heading>
       <Grid templateColumns="repeat(auto-fill, minmax(300px, 1fr))" gap={6}>
         {rooms.map((room) => {
-          const status = getRoomStatus(room.roomNumber, room.name, bookings);
+          const status = getRoomStatus(room.name, bookings);
 
           return (
             <Box
@@ -312,7 +322,14 @@ const payload = {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
+            <Button
+              colorScheme="teal"
+              mr={3}
+              onClick={handleSubmit}
+              isLoading={isSubmitting}
+              loadingText="Submitting..."
+              isDisabled={isSubmitting}
+            >
               Submit
             </Button>
             <Button onClick={formModal.onClose}>Cancel</Button>

@@ -1,25 +1,20 @@
 // src/utils/getRoomStatus.ts
 import { Booking } from "@/types";
 
-
-
-export function getRoomStatus(
-  roomNumber: number,
-  roomName: string,
-  bookings: Booking[]
-) {
+// Status of a room right now, based on the admin bookings list.
+// Room names are unique, so bookings are matched by name.
+export function getRoomStatus(roomName: string, bookings: Booking[]) {
   const now = new Date();
 
   for (const booking of bookings) {
+    if (booking.roomName !== roomName || booking.isCancelled) continue;
+
     const start = new Date(booking.startDate);
-    const end = new Date(booking.endDate);
-    end.setHours(12, 0, 0, 0); // end date expiry is 12 noon
+    start.setHours(0, 0, 0, 0); // treat the whole check-in day as taken (walk-ins arrive before 2 PM)
+    const end = new Date(booking.endDate); // already set to 12:00 noon check-out by the server
 
-    const match =
-      booking.roomNumber === roomNumber && booking.roomName === roomName;
-
-    if (match && now >= start && now <= end) {
-      return booking.status === "reserved" ? "Reserved" : "Booked";
+    if (now >= start && now <= end) {
+      return booking.isPaid ? "Booked" : "Reserved";
     }
   }
 

@@ -20,12 +20,18 @@ export interface Booking {
   price?: number;
   startDate: string;        // or Date if you parse it
   endDate: string;
-  status: "pending" | "booked" | "reserved" | "cancelled" | "confirmed";
+  status: string;           // label from the server, e.g. "Admin · Reserved"
   paymentStatus?: string;
   source: "user" | "dashboard" | string;
   isPaid?: boolean; // 👈 Add this line
   fullName?: string; // 👈 ADD THIS LINE
   isCancelled?: boolean; // ✅ Add this
+  nights?: number;
+  totalAmount?: number;
+  amountPaid?: number;
+  paymentMethod?: string;
+  holdExpiresAt?: string;   // set while an online guest is paying on Paystack
+  needsAttention?: string;  // set when a paid booking needs the admin (e.g. room clash)
   // Add any other props you use
 }
 

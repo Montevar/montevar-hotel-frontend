@@ -1,7 +1,6 @@
 "use client";
 
 import { API_BASE_URL } from "@/utils/api";
-import { getRoomStatus } from "@/utils/getRoomStatus";
 import {
   Box,
   Button,
@@ -24,14 +23,14 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Room, Booking } from "@/types";
+import { Room } from "@/types";
 
 export default function BookingPage() {
   const [category, setCategory] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [isReserving, setIsReserving] = useState(false);
@@ -74,10 +73,14 @@ useEffect(() => {
     },
     withCredentials: true, // important for session cookies
   })
-  .then((res) => setAvailableRooms(res.data))
+  .then((res) => {
+    setAvailableRooms(res.data);
+    setHasSearched(true);
+  })
   .catch((err) => {
     console.error("Auto-fetch error:", err);
-    toast({ title: "Error fetching rooms", status: "error" });
+    const message = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+    toast({ title: message || "Error fetching rooms", status: "error" });
   });
 
   }
@@ -85,15 +88,6 @@ useEffect(() => {
 
 
 
-
-  useEffect(() => {
-  fetch(`${API_BASE_URL}/api/bookings`, {
-    credentials: "include", // if you're using sessions/cookies
-  })
-    .then((res) => res.json())
-    .then((data) => setBookings(data))
-    .catch((err) => console.error("Failed to fetch bookings:", err));
-}, []);
 
  const handleAvailability = async () => {
   if (!startDate || !endDate || !category) {
@@ -107,8 +101,10 @@ useEffect(() => {
     withCredentials: true, // important for cookies/session support
   });
   setAvailableRooms(res.data);
-} catch {
-  toast({ title: "Error fetching rooms", status: "error" });
+  setHasSearched(true);
+} catch (err) {
+  const message = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+  toast({ title: message || "Error fetching rooms", status: "error" });
 }
 
 };
@@ -227,21 +223,13 @@ const verifyPayment = async (reference: string) => {
 
     if (data.verified && data.updated) {
       toast({
-        title: "Payment Verified",
-        description: "Your booking has been confirmed.",
-        status: "success",
+        title: data.conflict ? "Payment Received" : "Payment Verified",
+        description: data.conflict ? data.message : "Your booking has been confirmed.",
+        status: data.conflict ? "warning" : "success",
         duration: 10000,
         isClosable: true,
         position: "top",
       });
-
-      // Refresh bookings to reflect isPaid = true
-        const bookingRes = await fetch(`${API_BASE_URL}/api/bookings`, {
-        credentials: "include", // for sessions/cookies
-        });
-        const bookingData = await bookingRes.json();
-        setBookings(bookingData);
-
 
       // Optional: clean up the URL
       const url = new URL(window.location.href);
@@ -304,7 +292,8 @@ const verifyPayment = async (reference: string) => {
       {availableRooms.length > 0 ? (
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mt={8}>
           {availableRooms.map((room) => {
-            const status = getRoomStatus(Number(room.roomNumber), room.name, bookings);
+            // The availability endpoint only returns rooms that are free for the chosen dates
+            const status = "Available";
 
 
             return (
@@ -326,16 +315,14 @@ const verifyPayment = async (reference: string) => {
                     <Button
                       colorScheme="yellow"
                       onClick={() => handleOpenForm(room, "reserve")}
-                      isDisabled={status !== "Available"}
                     >
-                      {status === "Reserved" ? "Reserved" : "Reserve"}
+                      Reserve
                     </Button>
                     <Button
                       colorScheme="blue"
                       onClick={() => handleOpenForm(room, "book")}
-                      isDisabled={status !== "Available"}
                     >
-                      {status === "Booked" ? "Booked" : "Book Now"}
+                      Book Now
                     </Button>
                   </Flex>
                 </Box>
@@ -344,7 +331,11 @@ const verifyPayment = async (reference: string) => {
           })}
         </SimpleGrid>
       ) : (
-        <Text mt={8}>Let’s check for available rooms for you…</Text>
+        <Text mt={8}>
+          {hasSearched
+            ? "No rooms in this category are free for those dates. Please try other dates or another category."
+            : "Let’s check for available rooms for you…"}
+        </Text>
       )}
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered>

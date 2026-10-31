@@ -136,7 +136,7 @@ export default function Footer() {
 
           <HStack spacing={6}>
             <Link as={NextLink} href="/terms">Terms & Conditions</Link>
-            <Link as={NextLink} href="#hotel-info">Policy</Link>
+            <Link as={NextLink} href="/privacy">Privacy Policy</Link>
           </HStack>
         </Flex>
       </Container>
