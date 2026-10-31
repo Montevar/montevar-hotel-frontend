@@ -6,7 +6,7 @@ import Footer from './Footer';
 
 const FooterWrapper = () => {
   const pathname = usePathname();
-  const hideFooter = pathname.startsWith('/dashboard');
+  const hideFooter = pathname.startsWith('/dashboard') || pathname.startsWith('/manager');
 
   if (hideFooter) return null;
 

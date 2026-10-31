@@ -22,7 +22,10 @@ const DashboardInfoPage = () => {
  useEffect(() => {
   const fetchBookings = async () => {
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/bookings`);
+      const response = await fetch(`${getApiBaseUrl()}/api/bookings`, {
+        credentials: "include", // admin session cookie
+      });
+      if (!response.ok) throw new Error(`Failed with status ${response.status}`);
       const data = await response.json();
 
       // Sort by MongoDB ObjectId timestamp (newest first)
@@ -46,6 +49,7 @@ const DashboardInfoPage = () => {
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/bookings/cancel/${id}`, {
         method: "PATCH",
+        credentials: "include",
       });
       const result = await res.json();
       if (res.ok) {
@@ -64,10 +68,28 @@ const DashboardInfoPage = () => {
     }
   };
 
+  const handleMarkPaid = async (id: string) => {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/bookings/${id}/mark-paid`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to mark as paid");
+
+      setBookings((prev) => prev.map((b) => (b._id === id ? result.booking : b)));
+      toast({ title: "Booking marked as paid.", status: "success", duration: 3000, isClosable: true });
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast({ title: error.message, status: "error", duration: 3000, isClosable: true });
+    }
+  };
+
  const handleClearAll = async () => {
   try {
     const res = await fetch(`${getApiBaseUrl()}/api/bookings/clear-all`, {
       method: "DELETE",
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -107,9 +129,9 @@ const DashboardInfoPage = () => {
          
          {bookings.map((booking) => {
   const now = new Date();
-  const endDate = new Date(booking.endDate);
-  endDate.setHours(12, 0, 0, 0);
+  const endDate = new Date(booking.endDate); // already 12:00 noon check-out from the server
   const isExpired = endDate.getTime() < now.getTime();
+  const isAwaitingPaystack = !booking.isPaid && !!booking.holdExpiresAt;
   const isCanceled =
     booking.isCancelled || booking.status?.toLowerCase() === "cancelled";
   const isCancelable =
@@ -131,7 +153,13 @@ const DashboardInfoPage = () => {
         {typeof booking.roomPrice === "number"
           ? booking.roomPrice.toLocaleString()
           : "N/A"}
+        {booking.nights ? ` per night · ${booking.nights} night${booking.nights > 1 ? "s" : ""}` : ""}
       </Text>
+      {typeof booking.totalAmount === "number" && (
+        <Text>
+          <strong>Total:</strong> ₦{booking.totalAmount.toLocaleString()}
+        </Text>
+      )}
       <Text>
         <strong>Name:</strong> {booking.fullName}
       </Text>
@@ -157,8 +185,16 @@ const DashboardInfoPage = () => {
         {booking.source === "online" && booking.isPaid && (
           <Badge colorScheme="teal">ONLINE USER · VIA PAYSTACK · PAID</Badge>
         )}
-        {booking.source === "online" && !booking.isPaid && (
+        {booking.source === "online" && !booking.isPaid && !isAwaitingPaystack && (
           <Badge colorScheme="orange">ONLINE USER · RESERVED · UNPAID</Badge>
+        )}
+        {isAwaitingPaystack && (
+          <Badge colorScheme="yellow">ONLINE USER · PAYING ON PAYSTACK</Badge>
+        )}
+        {booking.needsAttention && (
+          <Badge colorScheme="red" variant="solid" whiteSpace="normal">
+            NEEDS ATTENTION: {booking.needsAttention}
+          </Badge>
         )}
         {booking.source === "dashboard" && booking.isPaid && (
           <Badge colorScheme="green">ADMIN · BOOKED · PAID</Badge>
@@ -176,15 +212,18 @@ const DashboardInfoPage = () => {
         )}
       </Flex>
 
-      {isCancelable && (
-        <Button
-          mt={4}
-          colorScheme="red"
-          onClick={() => handleCancel(booking._id)}
-        >
-                  Cancel
-                </Button>
-              )}
+      <Flex mt={4} gap={2} wrap="wrap">
+        {!booking.isPaid && !isCanceled && !isExpired && !isAwaitingPaystack && (
+          <Button colorScheme="green" onClick={() => handleMarkPaid(booking._id)}>
+            Mark as Paid
+          </Button>
+        )}
+        {isCancelable && (
+          <Button colorScheme="red" onClick={() => handleCancel(booking._id)}>
+            Cancel
+          </Button>
+        )}
+      </Flex>
             </Box>
           );
         })}

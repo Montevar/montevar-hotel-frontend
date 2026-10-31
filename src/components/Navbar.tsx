@@ -18,6 +18,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const isDashboard = pathname?.startsWith('/dashboard');
+  const isManager = pathname?.startsWith('/manager');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,6 +27,9 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Management section has its own header
+  if (isManager) return null;
 
   if (isDashboard) {
     // 🧱 Left sticky sidebar for admin dashboard
@@ -51,6 +55,9 @@ export default function Navbar() {
           </Link>
           <Link as={NextLink} href="/dashboard/listings" _hover={{ color: 'teal.300' }}>
             Room Listings
+          </Link>
+          <Link as={NextLink} href="/manager" _hover={{ color: 'teal.300' }}>
+            Management
           </Link>
         </VStack>
       </Box>

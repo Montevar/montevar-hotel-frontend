@@ -10,8 +10,10 @@ import {
   ListItem,
   ListIcon,
   Divider,
+  Link,
 } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
+import NextLink from 'next/link';
 
 export default function TermsPage() {
   return (
@@ -123,6 +125,14 @@ export default function TermsPage() {
           <Heading size="lg">Right to Refuse Service</Heading>
           <Text>
             Montevar Hotel reserves the right to refuse service or cancel bookings at our discretion for guests who violate any of these terms, are abusive, or pose a threat to staff or other guests.
+          </Text>
+
+          <Text>
+            For how we handle your personal information, see our{' '}
+            <Link as={NextLink} href="/privacy" color="teal.600">
+              Privacy Policy
+            </Link>
+            .
           </Text>
 
           <Text fontSize="sm" color="gray.500" mt={10}>
