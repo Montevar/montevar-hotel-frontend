@@ -32,6 +32,8 @@ export interface Booking {
   paymentMethod?: string;
   holdExpiresAt?: string;   // set while an online guest is paying on Paystack
   needsAttention?: string;  // set when a paid booking needs the admin (e.g. room clash)
+  payBy?: string;           // unpaid online reservation: pay before this or it is cancelled
+  cancelReason?: string;    // "unpaid" when cancelled automatically for not paying in time
   // Add any other props you use
 }
 

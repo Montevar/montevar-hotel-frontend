@@ -190,7 +190,9 @@ useEffect(() => {
     } else {
       toast({
         title: "Room reserved successfully!",
-        description: "NOTE: Please contact us to make payment 12 hours prior to check-in, in other to avoid cancellation .",
+        description: data.payBy
+          ? `NOTE: Please contact us to pay by ${new Date(data.payBy).toLocaleString("en-GB", { timeZone: "Africa/Lagos", dateStyle: "medium", timeStyle: "short" })} (12 hours before check-in). Unpaid reservations are cancelled automatically after that.`
+          : "NOTE: Please contact us to make payment 12 hours prior to check-in, in order to avoid cancellation.",
         status: "success",
         duration: 20000,
         isClosable: true,

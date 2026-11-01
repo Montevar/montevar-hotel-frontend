@@ -90,10 +90,14 @@ const DashboardInfoPage = () => {
     const res = await fetch(`${getApiBaseUrl()}/api/bookings/clear-all`, {
       method: "DELETE",
       credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: "DELETE ALL BOOKINGS" }),
     });
 
     if (!res.ok) {
-      throw new Error("Failed to clear bookings");
+      throw new Error(
+        res.status === 401 ? "Only upper management can clear all bookings." : "Failed to clear bookings."
+      );
     }
 
     toast({
@@ -106,9 +110,8 @@ const DashboardInfoPage = () => {
     // Refresh the bookings list in UI
     setBookings([]);
   } catch (error) {
-    console.error("Error clearing bookings:", error);
     toast({
-      title: "Failed to clear bookings.",
+      title: error instanceof Error ? error.message : "Failed to clear bookings.",
       status: "error",
       duration: 3000,
       isClosable: true,
@@ -179,6 +182,13 @@ const DashboardInfoPage = () => {
       <Text>
         <strong>Status:</strong> {booking.status}
       </Text>
+      {booking.payBy && !booking.isPaid && !isCanceled && (
+        <Text color={new Date(booking.payBy) <= now ? "red.600" : "orange.600"}>
+          <strong>Pay by:</strong>{" "}
+          {new Date(booking.payBy).toLocaleString("en-GB", { timeZone: "Africa/Lagos", dateStyle: "medium", timeStyle: "short" })}
+          {" "}(cancelled automatically if not paid)
+        </Text>
+      )}
 
       <Flex mt={3} gap={2} wrap="wrap">
         {/* Centralized label */}
@@ -231,8 +241,10 @@ const DashboardInfoPage = () => {
 
                     <Button
             onClick={() => {
-              const confirm = window.confirm("Are you sure you want to clear all bookings? This action is irreversible.");
-              if (confirm) {
+              const typed = window.prompt(
+                "Managers only. This permanently deletes EVERY booking. Type DELETE ALL BOOKINGS to confirm."
+              );
+              if (typed === "DELETE ALL BOOKINGS") {
                 handleClearAll();
               }
             }}

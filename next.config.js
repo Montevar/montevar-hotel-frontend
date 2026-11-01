@@ -12,9 +12,6 @@ const nextConfig = {
     };
     return config;
   },
-  env: {
-    MY_VAR: process.env.MY_VAR || '',
-  },
 };
 
 module.exports = nextConfig;
