@@ -382,7 +382,8 @@ function RoomsManager({ onSessionLost }: { onSessionLost: () => void }) {
 
   const loadRooms = useCallback(async () => {
     const { data } = await api("/rooms");
-    setRooms(Array.isArray(data) ? data.sort((a: Room, b: Room) => a.name.localeCompare(b.name)) : []);
+    // Newest room first (a MongoDB id starts with its creation time, so a later id sorts higher)
+    setRooms(Array.isArray(data) ? data.sort((a: Room, b: Room) => b._id.localeCompare(a._id)) : []);
     setLoading(false);
   }, []);
 
@@ -699,7 +700,7 @@ function BookingsManager({ onSessionLost }: { onSessionLost: () => void }) {
   const [filter, setFilter] = useState<BookingFilter>("current");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"checkIn" | "bookedNew" | "bookedOld">("checkIn");
+  const [sortBy, setSortBy] = useState<"checkIn" | "bookedNew" | "bookedOld">("bookedNew");
   const [editing, setEditing] = useState<Booking | null>(null);
   const [form, setForm] = useState<BookingForm>(emptyBookingForm);
   const [deleting, setDeleting] = useState<Booking | null>(null);
@@ -828,8 +829,8 @@ function BookingsManager({ onSessionLost }: { onSessionLost: () => void }) {
           <option value="online">Online only</option>
         </Select>
         <Select maxW="220px" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
-          <option value="checkIn">Sort by check-in date</option>
           <option value="bookedNew">Newest bookings first</option>
+          <option value="checkIn">Sort by check-in date</option>
           <option value="bookedOld">Oldest bookings first</option>
         </Select>
         <Input maxW="260px" placeholder="Search guest, phone, room..." value={search} onChange={(e) => setSearch(e.target.value)} />
