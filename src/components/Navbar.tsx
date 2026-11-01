@@ -56,9 +56,6 @@ export default function Navbar() {
           <Link as={NextLink} href="/dashboard/listings" _hover={{ color: 'teal.300' }}>
             Room Listings
           </Link>
-          <Link as={NextLink} href="/manager" _hover={{ color: 'teal.300' }}>
-            Management
-          </Link>
         </VStack>
       </Box>
     );

@@ -334,6 +334,7 @@ function ManagementDashboard({
           {/* On phones the tabs scroll sideways instead of widening the page */}
           <TabList overflowX="auto" overflowY="hidden" sx={{ "& > button": { flexShrink: 0, whiteSpace: "nowrap" } }}>
             <Tab>Bookings</Tab>
+            <Tab>Discounts</Tab>
             <Tab>Booking history</Tab>
             <Tab>Rooms</Tab>
             <Tab>Staff login</Tab>
@@ -342,6 +343,9 @@ function ManagementDashboard({
           <TabPanels>
             <TabPanel px={0}>
               <BookingsManager onSessionLost={onSessionLost} />
+            </TabPanel>
+            <TabPanel px={0}>
+              <DiscountApprovals onSessionLost={onSessionLost} />
             </TabPanel>
             <TabPanel px={0}>
               <BookingHistory onSessionLost={onSessionLost} />
@@ -617,6 +621,9 @@ const ACTION_LABELS: Record<string, string> = {
   "booking.update": "Edited booking",
   "booking.delete": "Deleted booking",
   "booking.expire": "Cancelled · not paid in time",
+  "booking.discount_request": "Discount requested",
+  "booking.discount_approve": "Discount approved",
+  "booking.discount_reject": "Discount rejected",
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -901,6 +908,12 @@ function BookingsManager({ onSessionLost }: { onSessionLost: () => void }) {
                         Needs attention
                       </Badge>
                     )}
+                    {b.discountStatus === "pending" && <Badge colorScheme="orange">Discount to approve</Badge>}
+                    {b.discountStatus === "approved" && (
+                      <Badge colorScheme="green" variant="outline">
+                        ₦{b.discountAmount?.toLocaleString()} discount
+                      </Badge>
+                    )}
                   </Flex>
                 </Td>
                 <Td>
@@ -1075,6 +1088,227 @@ function BookingsManager({ onSessionLost }: { onSessionLost: () => void }) {
 }
 
 // ---------- Booking history (audit trail of every booking change) ----------
+// ---------- Discounts the receptionist gave, waiting for a manager ----------
+const fullPriceOf = (b: Booking) => (b.roomPrice || 0) * (b.nights || 0);
+
+function DiscountApprovals({ onSessionLost }: { onSessionLost: () => void }) {
+  const [bookings, setBookings] = useState<Booking[] | null>(null);
+  const [rejecting, setRejecting] = useState<Booking | null>(null);
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+  const toast = useToast();
+  const { busy, run } = useSingleFlight();
+
+  const load = useCallback(async () => {
+    const { ok, status, data } = await api("/bookings");
+    if (status === 401) return onSessionLost();
+    setBookings(ok && Array.isArray(data) ? data.filter((b: Booking) => !!b.discountStatus) : []);
+  }, [onSessionLost]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const decide = (b: Booking, decision: "approve" | "reject", reasonNote = "") =>
+    run(async () => {
+      setError("");
+      const { ok, status, data } = await api(`/bookings/${b._id}/discount`, "PATCH", { decision, note: reasonNote });
+      if (status === 401) return onSessionLost();
+      if (!ok) {
+        if (decision === "reject") setError(data.message || "Could not reject the discount.");
+        else toast({ title: data.message || "Could not approve the discount.", status: "error" });
+        return;
+      }
+      toast({
+        title: decision === "approve" ? "Discount approved" : "Discount rejected",
+        description:
+          decision === "approve"
+            ? `${b.fullName} pays ₦${data.totalAmount?.toLocaleString()}.`
+            : `${b.fullName} pays the full ₦${data.totalAmount?.toLocaleString()}.`,
+        status: "success",
+      });
+      setRejecting(null);
+      setNote("");
+      load();
+    });
+
+  if (!bookings) return <Spinner />;
+
+  const pending = bookings
+    .filter((b) => b.discountStatus === "pending")
+    .sort((a, b) => Date.parse(b.discountRequestedAt || "") - Date.parse(a.discountRequestedAt || ""));
+  const decided = bookings
+    .filter((b) => b.discountStatus !== "pending")
+    .sort((a, b) => Date.parse(b.discountDecidedAt || "") - Date.parse(a.discountDecidedAt || ""));
+
+  const priceLines = (b: Booking) => (
+    <>
+      <Text>Full price: ₦{fullPriceOf(b).toLocaleString()}</Text>
+      <Text fontWeight="semibold">Discount: ₦{(b.discountAmount || 0).toLocaleString()}</Text>
+      <Text>Guest pays: ₦{Math.max(0, fullPriceOf(b) - (b.discountAmount || 0)).toLocaleString()}</Text>
+    </>
+  );
+
+  return (
+    <VStack align="stretch" spacing={6}>
+      <Box bg="white" borderRadius="md" boxShadow="sm" p={4}>
+        <Heading size="sm" mb={3}>
+          Waiting for approval ({pending.length})
+        </Heading>
+        {pending.length === 0 ? (
+          <Text color="gray.600">No discounts waiting for approval.</Text>
+        ) : (
+          <TableContainer>
+            <Table size="sm">
+              <Thead>
+                <Tr>
+                  <Th>Guest</Th>
+                  <Th>Room &amp; stay</Th>
+                  <Th>Price</Th>
+                  <Th>Reason</Th>
+                  <Th>Given by</Th>
+                  <Th></Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {pending.map((b) => (
+                  <Tr key={b._id} verticalAlign="top">
+                    <Td>
+                      <Text fontWeight="semibold">{b.fullName}</Text>
+                      <Text fontSize="xs" color="gray.600">
+                        {b.phone}
+                      </Text>
+                    </Td>
+                    <Td>
+                      <Text>{b.roomName}</Text>
+                      <Text fontSize="xs" color="gray.600">
+                        {showDay(b.startDate)} → {showDay(b.endDate)} · {b.nights} night{b.nights === 1 ? "" : "s"}
+                      </Text>
+                    </Td>
+                    <Td fontSize="sm">{priceLines(b)}</Td>
+                    <Td whiteSpace="normal" maxW="220px" fontSize="sm">
+                      {b.discountReason}
+                    </Td>
+                    <Td fontSize="xs">
+                      <Text>{b.discountRequestedBy}</Text>
+                      <Text color="gray.600">{b.discountRequestedAt && showDateTime(b.discountRequestedAt)}</Text>
+                    </Td>
+                    <Td>
+                      <Flex gap={2}>
+                        <Button size="sm" colorScheme="green" onClick={() => decide(b, "approve")} isDisabled={busy}>
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          variant="outline"
+                          onClick={() => {
+                            setNote("");
+                            setError("");
+                            setRejecting(b);
+                          }}
+                          isDisabled={busy}
+                        >
+                          Reject
+                        </Button>
+                      </Flex>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        )}
+      </Box>
+
+      <Box bg="white" borderRadius="md" boxShadow="sm" p={4}>
+        <Heading size="sm" mb={3}>
+          Decided
+        </Heading>
+        {decided.length === 0 ? (
+          <Text color="gray.600">No decisions yet.</Text>
+        ) : (
+          <TableContainer>
+            <Table size="sm">
+              <Thead>
+                <Tr>
+                  <Th>Decision</Th>
+                  <Th>Guest</Th>
+                  <Th>Room</Th>
+                  <Th>Price</Th>
+                  <Th>Reason</Th>
+                  <Th>Decided by</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {decided.map((b) => (
+                  <Tr key={b._id} verticalAlign="top">
+                    <Td>
+                      <Badge colorScheme={b.discountStatus === "approved" ? "green" : "red"}>{b.discountStatus}</Badge>
+                    </Td>
+                    <Td>{b.fullName}</Td>
+                    <Td>{b.roomName}</Td>
+                    <Td fontSize="sm">{priceLines(b)}</Td>
+                    <Td whiteSpace="normal" maxW="220px" fontSize="sm">
+                      <Text>{b.discountReason}</Text>
+                      {b.discountNote && (
+                        <Text color="gray.600" mt={1}>
+                          Manager: {b.discountNote}
+                        </Text>
+                      )}
+                    </Td>
+                    <Td fontSize="xs">
+                      <Text>{b.discountDecidedBy}</Text>
+                      <Text color="gray.600">{b.discountDecidedAt && showDateTime(b.discountDecidedAt)}</Text>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        )}
+      </Box>
+
+      <Modal isOpen={!!rejecting} onClose={() => setRejecting(null)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Reject discount</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {rejecting && (
+              <Text mb={3}>
+                {rejecting.fullName} · {rejecting.roomName}: the ₦{(rejecting.discountAmount || 0).toLocaleString()} discount will not
+                apply, and the guest owes the full ₦{fullPriceOf(rejecting).toLocaleString()}.
+              </Text>
+            )}
+            <FormControl isRequired>
+              <FormLabel>Why? (the receptionist will see this)</FormLabel>
+              <Textarea value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} />
+            </FormControl>
+            {error && (
+              <Text color="red.500" fontSize="sm" mt={2}>
+                {error}
+              </Text>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="red"
+              mr={3}
+              onClick={() => rejecting && decide(rejecting, "reject", note)}
+              isLoading={busy}
+              isDisabled={busy || note.trim().length < 3}
+            >
+              Reject discount
+            </Button>
+            <Button onClick={() => setRejecting(null)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </VStack>
+  );
+}
+
 function BookingHistory({ onSessionLost }: { onSessionLost: () => void }) {
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
 
@@ -1122,6 +1356,17 @@ function BookingHistory({ onSessionLost }: { onSessionLost: () => void }) {
                   {e.details?.reason ? (
                     <Text mb={1}>
                       <strong>Reason:</strong> {String(e.details.reason)}
+                    </Text>
+                  ) : null}
+                  {e.details?.amount ? (
+                    <Text mb={1}>
+                      <strong>Discount:</strong> ₦{Number(e.details.amount).toLocaleString()}
+                      {e.details.requestedBy ? ` (given by ${String(e.details.requestedBy)})` : ""}
+                    </Text>
+                  ) : null}
+                  {e.details?.note ? (
+                    <Text mb={1}>
+                      <strong>Manager&apos;s note:</strong> {String(e.details.note)}
                     </Text>
                   ) : null}
                   {e.details?.payBy ? (

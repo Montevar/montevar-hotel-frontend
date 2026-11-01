@@ -182,6 +182,18 @@ const DashboardInfoPage = () => {
       <Text>
         <strong>Status:</strong> {booking.status}
       </Text>
+      {!!booking.discountAmount && (
+        <Text
+          color={booking.discountStatus === "approved" ? "green.600" : booking.discountStatus === "rejected" ? "red.600" : "orange.600"}
+        >
+          <strong>Discount:</strong> ₦{booking.discountAmount.toLocaleString()}{" "}
+          {booking.discountStatus === "approved"
+            ? "· approved by manager"
+            : booking.discountStatus === "rejected"
+              ? `· rejected by manager${booking.discountNote ? ` (${booking.discountNote})` : ""}`
+              : "· waiting for manager approval"}
+        </Text>
+      )}
       {booking.payBy && !booking.isPaid && !isCanceled && (
         <Text color={new Date(booking.payBy) <= now ? "red.600" : "orange.600"}>
           <strong>Pay by:</strong>{" "}

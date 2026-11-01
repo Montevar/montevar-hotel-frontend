@@ -19,6 +19,7 @@ import {
   ModalBody,
   ModalFooter,
   FormControl,
+  FormHelperText,
   FormLabel,
   Input,
   SimpleGrid,
@@ -49,6 +50,8 @@ export default function RoomListingsPage() {
   email: "", 
   startDate: "",
   endDate: "",
+  discount: "",
+  discountReason: "",
   });
   const [isBooking, setIsBooking] = useState(false);
   const [isReserving, setIsReserving] = useState(false);
@@ -100,6 +103,14 @@ export default function RoomListingsPage() {
     fetchBookings();
   }, []);
 
+  // Nights and price for the dates in the form (check-in and check-out are whole days)
+  const nights =
+    formData.startDate && formData.endDate
+      ? Math.round((Date.parse(formData.endDate) - Date.parse(formData.startDate)) / 86400000)
+      : 0;
+  const fullPrice = nights > 0 && selectedRoom ? selectedRoom.price * nights : 0;
+  const discountValue = Number(formData.discount) || 0;
+
   const openFormModal = (room: Room, type: "book" | "reserve") => {
     setSelectedRoom(room);
     setIsBooking(type === "book");
@@ -124,6 +135,8 @@ const payload = {
   endDate: formData.endDate,
   isPaid: isBooking,
   source: "dashboard", // ✅ This is critical!
+  // Optional discount: a manager must approve it before it comes off the total
+  ...(Number(formData.discount) > 0 ? { discountAmount: Number(formData.discount), discountReason: formData.discountReason } : {}),
 };
 
 
@@ -137,6 +150,7 @@ const payload = {
     await axios.post(endpoint, payload, { withCredentials: true });
     toast({
       title: `${isBooking ? "Booked" : "Reserved"} successfully`,
+      description: discountValue > 0 ? "The discount is waiting for a manager to approve it." : undefined,
       status: "success",
     });
     formModal.onClose();
@@ -319,6 +333,37 @@ const payload = {
                 />
               </FormControl>
             </SimpleGrid>
+
+            <FormControl mt={4}>
+              <FormLabel>Discount (₦) — optional</FormLabel>
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                placeholder="0"
+                value={formData.discount}
+                onChange={(e) => setFormData({ ...formData, discount: e.target.value.replace(/[^0-9]/g, "") })}
+              />
+              <FormHelperText>
+                {fullPrice > 0
+                  ? `Full price: ₦${fullPrice.toLocaleString()} (${nights} night${nights > 1 ? "s" : ""})` +
+                    (discountValue > 0 ? ` · Guest pays: ₦${Math.max(0, fullPrice - discountValue).toLocaleString()}` : "")
+                  : "Pick the dates to see the full price."}
+                {discountValue > 0 && " · A manager must approve the discount."}
+              </FormHelperText>
+            </FormControl>
+
+            {discountValue > 0 && (
+              <FormControl mt={3} isRequired>
+                <FormLabel>Reason for the discount</FormLabel>
+                <Input
+                  placeholder="e.g. Returning guest, agreed by phone"
+                  maxLength={200}
+                  value={formData.discountReason}
+                  onChange={(e) => setFormData({ ...formData, discountReason: e.target.value })}
+                />
+              </FormControl>
+            )}
           </ModalBody>
 
           <ModalFooter>

@@ -34,6 +34,14 @@ export interface Booking {
   needsAttention?: string;  // set when a paid booking needs the admin (e.g. room clash)
   payBy?: string;           // unpaid online reservation: pay before this or it is cancelled
   cancelReason?: string;    // "unpaid" when cancelled automatically for not paying in time
+  discountAmount?: number;  // front-desk discount in naira; only taken off once approved
+  discountReason?: string;
+  discountStatus?: "pending" | "approved" | "rejected";
+  discountRequestedBy?: string;
+  discountRequestedAt?: string;
+  discountDecidedBy?: string;
+  discountDecidedAt?: string;
+  discountNote?: string;
   // Add any other props you use
 }
 
