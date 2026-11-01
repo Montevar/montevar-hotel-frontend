@@ -41,7 +41,6 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import NextLink from "next/link";
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBaseUrl } from "@/utils/apiConfig";
@@ -317,7 +316,7 @@ function ManagementDashboard({
           </Text>
         </Box>
         <Flex gap={2} wrap="wrap">
-          <Button as={NextLink} href="/dashboard" variant="outline">
+          <Button as="a" href="/dashboard" target="_blank" rel="noopener noreferrer" variant="outline">
             Bookings dashboard
           </Button>
           <Button variant="outline" onClick={passwordModal.onOpen}>
