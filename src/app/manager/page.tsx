@@ -44,6 +44,7 @@ import {
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBaseUrl } from "@/utils/apiConfig";
+import { AnimatePresence, FadeIn, motion } from "@/components/motion";
 import type { Booking as BaseBooking } from "@/types";
 
 type Stage = "loading" | "signed_out" | "needs_password" | "needs_password_setup" | "signed_in";
@@ -148,7 +149,17 @@ export default function ManagerPage() {
 
   return (
     <Flex minH="100vh" align="center" justify="center" bg="gray.50" p={4}>
-      <Box p={6} maxW="420px" w="100%" borderRadius="md" boxShadow="md" bg="white">
+      <Box
+        as={motion.div}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        p={6}
+        maxW="420px"
+        w="100%"
+        borderRadius="md"
+        boxShadow="md"
+        bg="white"
+      >
         <Heading size="lg" mb={1} textAlign="center">
           Management
         </Heading>
@@ -341,22 +352,22 @@ function ManagementDashboard({
           </TabList>
           <TabPanels>
             <TabPanel px={0}>
-              <BookingsManager onSessionLost={onSessionLost} />
+              <FadeIn><BookingsManager onSessionLost={onSessionLost} /></FadeIn>
             </TabPanel>
             <TabPanel px={0}>
-              <DiscountApprovals onSessionLost={onSessionLost} />
+              <FadeIn><DiscountApprovals onSessionLost={onSessionLost} /></FadeIn>
             </TabPanel>
             <TabPanel px={0}>
-              <BookingHistory onSessionLost={onSessionLost} />
+              <FadeIn><BookingHistory onSessionLost={onSessionLost} /></FadeIn>
             </TabPanel>
             <TabPanel px={0}>
-              <RoomsManager onSessionLost={onSessionLost} />
+              <FadeIn><RoomsManager onSessionLost={onSessionLost} /></FadeIn>
             </TabPanel>
             <TabPanel px={0}>
-              <StaffLoginSetup onSessionLost={onSessionLost} />
+              <FadeIn><StaffLoginSetup onSessionLost={onSessionLost} /></FadeIn>
             </TabPanel>
             <TabPanel px={0}>
-              <ActivityLog onSessionLost={onSessionLost} />
+              <FadeIn><ActivityLog onSessionLost={onSessionLost} /></FadeIn>
             </TabPanel>
           </TabPanels>
         </Tabs>
@@ -859,7 +870,12 @@ function BookingsManager({ onSessionLost }: { onSessionLost: () => void }) {
               <Th />
             </Tr>
           </Thead>
-          <Tbody>
+          <Tbody
+            as={motion.tbody}
+            key={`${filter}-${sourceFilter}-${sortBy}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.2 } }}
+          >
             {shown.map((b) => (
               <Tr key={b._id}>
                 <Td>
@@ -1170,8 +1186,15 @@ function DiscountApprovals({ onSessionLost }: { onSessionLost: () => void }) {
                 </Tr>
               </Thead>
               <Tbody>
+                <AnimatePresence initial={false}>
                 {pending.map((b) => (
-                  <Tr key={b._id} verticalAlign="top">
+                  <Tr
+                    key={b._id}
+                    as={motion.tr}
+                    layout
+                    exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                    verticalAlign="top"
+                  >
                     <Td>
                       <Text fontWeight="semibold">{b.fullName}</Text>
                       <Text fontSize="xs" color="gray.600">
@@ -1214,6 +1237,7 @@ function DiscountApprovals({ onSessionLost }: { onSessionLost: () => void }) {
                     </Td>
                   </Tr>
                 ))}
+                </AnimatePresence>
               </Tbody>
             </Table>
           </TableContainer>

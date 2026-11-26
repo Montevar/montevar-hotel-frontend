@@ -12,7 +12,9 @@ import {
   Divider,
   Link,
 } from '@chakra-ui/react';
-import { CheckCircleIcon } from '@chakra-ui/icons';
+import { CheckIcon, CloseIcon } from '@chakra-ui/icons';
+import { LineReveal, Reveal } from '@/components/motion';
+import { Eyebrow } from '@/components/site/brand';
 import NextLink from 'next/link';
 
 const CONTACT_EMAIL = 'montevarhotels@gmail.com';
@@ -23,7 +25,7 @@ function Bullets({ items }: { items: React.ReactNode[] }) {
     <List spacing={3} pl={4}>
       {items.map((item, i) => (
         <ListItem key={i}>
-          <ListIcon as={CheckCircleIcon} color="green.500" />
+          <ListIcon as={CheckIcon} boxSize="10px" color="champagne.600" />
           {item}
         </ListItem>
       ))}
@@ -33,12 +35,27 @@ function Bullets({ items }: { items: React.ReactNode[] }) {
 
 export default function PrivacyPolicyPage() {
   return (
-    <Box py={10} bg="gray.50">
-      <Container maxW="6xl">
-        <VStack spacing={6} align="start">
-          <Heading size="2xl" textAlign="center" w="full">
-            Privacy Policy
-          </Heading>
+    <Box bg="ivory.100" pt={{ base: '128px', md: '176px' }} pb={{ base: 20, md: 32 }}>
+      <Container maxW="780px" px={{ base: 5, md: 8 }}>
+        <Reveal onMount delay={0.2}>
+          <Eyebrow>Montevar Hotel</Eyebrow>
+        </Reveal>
+        <Text as="h1" fontFamily="serif" fontWeight={300} fontSize={{ base: '52px', md: '84px' }} lineHeight={0.98} color="ink.900" mt={6} mb={{ base: 10, md: 14 }}>
+          <LineReveal onMount delay={0.3} lines={['Privacy', <em key="p">Policy</em>]} />
+        </Text>
+        <Reveal onMount delay={0.6}>
+        <VStack
+          spacing={6}
+          align="start"
+          color="ink.700"
+          lineHeight={1.85}
+          sx={{
+            h2: { fontFamily: 'serif', fontWeight: 400, fontSize: { base: '30px', md: '36px' }, lineHeight: 1.15, color: 'ink.900', pt: 6 },
+            hr: { borderColor: 'line.light', opacity: 1 },
+            'p, li': { color: 'stone.600' },
+            a: { color: 'champagne.600', textDecoration: 'underline', textUnderlineOffset: '3px' },
+          }}
+        >
 
           <Text color="gray.600">
             This policy explains what personal information Montevar Hotel (&quot;we&quot;, &quot;us&quot;) collects when you use
@@ -159,6 +176,7 @@ export default function PrivacyPolicyPage() {
             Last updated: October 2026
           </Text>
         </VStack>
+        </Reveal>
       </Container>
     </Box>
   );

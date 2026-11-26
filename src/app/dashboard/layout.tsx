@@ -21,6 +21,7 @@ import { HamburgerIcon } from '@chakra-ui/icons';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { getApiBaseUrl } from '@/utils/apiConfig';
+import { AnimatePresence, FadeIn, motion } from '@/components/motion';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -169,9 +170,9 @@ function DashboardLayout({
             </Button>
           </Flex>
 
-          <Box p={6}>
-            {children}
-          </Box>
+          <FadeIn>
+            <Box p={6}>{children}</Box>
+          </FadeIn>
         </Box>
       </Flex>
     </Flex>
@@ -207,6 +208,9 @@ function TOTPLogin({ onSuccess }: { onSuccess: () => void }) {
   return (
     <Flex minH="100vh" align="center" justify="center" bg="gray.50" p={4}>
       <Box
+        as={motion.div}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
         p={6}
         maxW="400px"
         borderRadius="md"
@@ -230,11 +234,22 @@ function TOTPLogin({ onSuccess }: { onSuccess: () => void }) {
           inputMode="numeric"
         />
 
-        {error && (
-          <Text color="red.500" mb={3}>
-            {error}
-          </Text>
-        )}
+        <AnimatePresence initial={false}>
+          {error && (
+            <Text
+              as={motion.p}
+              key={error}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              color="red.500"
+              mb={3}
+              role="alert"
+            >
+              {error}
+            </Text>
+          )}
+        </AnimatePresence>
 
         <Button colorScheme="teal" onClick={verifyCode} w="100%">
           Verify

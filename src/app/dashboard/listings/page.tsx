@@ -29,6 +29,7 @@ import axios from "axios";
 import { getRoomStatus } from "@/utils/getRoomStatus";
 import { Booking } from "@/types";
 import { getApiBaseUrl } from "@/utils/apiConfig";
+import { ListItem } from "@/components/motion";
 
 interface Room {
   _id: string;
@@ -175,12 +176,13 @@ const payload = {
     <Box p={6}>
       <Heading mb={6}>Room Listings</Heading>
       <Grid templateColumns="repeat(auto-fill, minmax(300px, 1fr))" gap={6}>
-        {rooms.map((room) => {
+        {rooms.map((room, index) => {
           const status = getRoomStatus(room.name, bookings);
 
           return (
+            <ListItem key={room._id} index={index}>
             <Box
-              key={room._id}
+              h="full"
               borderWidth="1px"
               borderRadius="2xl"
               boxShadow="md"
@@ -235,6 +237,7 @@ const payload = {
                 </Button>
               </Box>
             </Box>
+            </ListItem>
           );
         })}
       </Grid>

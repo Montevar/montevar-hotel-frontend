@@ -13,6 +13,7 @@ import {
 import { Booking } from "@/types";
 import { useToast } from "@chakra-ui/react";
 import { getApiBaseUrl } from "@/utils/apiConfig";
+import { ListItem } from "@/components/motion";
 
 
 const DashboardInfoPage = () => {
@@ -130,7 +131,7 @@ const DashboardInfoPage = () => {
       ) : (
         <Stack spacing={4}>
          
-         {bookings.map((booking) => {
+         {bookings.map((booking, index) => {
   const now = new Date();
   const endDate = new Date(booking.endDate); // already 12:00 noon check-out from the server
   const isExpired = endDate.getTime() < now.getTime();
@@ -141,8 +142,8 @@ const DashboardInfoPage = () => {
     !isExpired && !isCanceled && now < new Date(booking.startDate);
 
   return (
+    <ListItem key={booking._id} index={index}>
     <Box
-      key={booking._id}
       border="1px solid #ccc"
       borderRadius="md"
       p={4}
@@ -247,6 +248,7 @@ const DashboardInfoPage = () => {
         )}
       </Flex>
             </Box>
+            </ListItem>
           );
         })}
 
